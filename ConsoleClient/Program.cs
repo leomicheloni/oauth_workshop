@@ -25,7 +25,7 @@ namespace ConsoleClient
             var apiClient = new HttpClient();
             apiClient.SetBearerToken(tokenResponse.AccessToken);
 
-            var response = await apiClient.GetAsync("https://localhost:44321/weatherforecast");
+            var response = await apiClient.GetAsync("http://localhost:5062/weatherforecast");
             if (!response.IsSuccessStatusCode)
             {
                 Console.WriteLine(response.StatusCode);

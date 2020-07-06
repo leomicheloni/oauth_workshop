@@ -50,6 +50,13 @@ namespace ProtectedAPI
 
             app.UseRouting();
 
+            app.UseCors(options =>
+            {
+                options.AllowAnyOrigin();
+                options.AllowAnyMethod();
+                options.AllowAnyHeader();
+            });
+
             app.UseAuthentication();
             app.UseAuthorization();
 

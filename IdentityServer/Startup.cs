@@ -1,6 +1,9 @@
+using IdentityServer4;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.IdentityModel.Tokens;
 
 namespace IdentityServer
 {
@@ -11,18 +14,43 @@ namespace IdentityServer
         public void ConfigureServices(IServiceCollection services)
         {
             var builder = services.AddIdentityServer()
+                .AddInMemoryIdentityResources(Config.Ids)
                 .AddInMemoryApiResources(Config.Apis)
-                .AddInMemoryClients(Config.Clients);
+                .AddInMemoryClients(Config.Clients)
+                .AddTestUsers(TestUsers.Users);
+
+            services.AddControllersWithViews();
 
             builder.AddDeveloperSigningCredential();
+
+            services.AddAuthentication();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-            app.UseDeveloperExceptionPage();
+            if (env.IsDevelopment())
+            {
+                app.UseDeveloperExceptionPage();
+            }
+
+            app.UseStaticFiles();
+            app.UseRouting();
+
+            app.UseCors(config =>
+            {
+                config.AllowAnyOrigin();
+                config.AllowAnyMethod();
+                config.AllowAnyHeader();
+            });
 
             app.UseIdentityServer();
+            app.UseAuthorization();
+
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapDefaultControllerRoute();
+            });
         }
     }
 }
