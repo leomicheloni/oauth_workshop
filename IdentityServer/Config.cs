@@ -50,6 +50,18 @@ namespace IdentityServer
                         IdentityServerConstants.StandardScopes.Profile,
                         "API1"
                     }
+                },
+                new Client
+                {
+                    ClientId = "ro.client",
+                    AllowedGrantTypes = GrantTypes.ResourceOwnerPassword,
+                    ClientSecrets = new [] { new Secret ("client.secret".ToSha256()) },
+                    AllowedScopes =
+                    {
+                        IdentityServerConstants.StandardScopes.OpenId,
+                        IdentityServerConstants.StandardScopes.Profile,
+                        "API1"
+                    }
                 }
             };
     }
