@@ -1,36 +1,27 @@
 ﻿using IdentityServer.ViewModels;
 using IdentityServer4;
 using IdentityServer4.Services;
-using IdentityServer4.Stores;
-using IdentityServer4.Test;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace IdentityServer.Controllers
 {
     public class AccountController : Controller
     {
-        private readonly TestUserStore _users;
-        private readonly SignInManager<TestUser> _signInManager;
+        private readonly UserManager<ApplicationUser> _userManager;
         private readonly IIdentityServerInteractionService _interaction;
-        private readonly IClientStore _clientStore;
-        private readonly IAuthenticationSchemeProvider _schemeProvider;
 
         public AccountController(
-            IIdentityServerInteractionService interaction,
-            IClientStore clientStore,
-            IAuthenticationSchemeProvider schemeProvider,
-            TestUserStore users = null)
+            UserManager<ApplicationUser> userManager,
+            IIdentityServerInteractionService interaction)
         {
-            _users = users ?? new TestUserStore(TestUsers.Users);
-
-            _interaction = interaction;
-            _clientStore = clientStore;
-            _schemeProvider = schemeProvider;
+            _userManager = userManager;
+            this._interaction = interaction;
         }
 
         [HttpGet]
@@ -42,33 +33,35 @@ namespace IdentityServer.Controllers
         [HttpPost]
         public async Task<IActionResult> Login(LoginViewModel model)
         {
-            var context = await _interaction.GetAuthorizationContextAsync(model.ReturnUrl);
-
-            if (!ModelState.IsValid)
-                return View(model);
-
-            if (!_users.ValidateCredentials(model.Username, model.Password))
+            if (ModelState.IsValid)
             {
-                ModelState.AddModelError("", "Invalid username or password");
-                return View(model);
+                var user = await _userManager.FindByNameAsync(model.Username);
+
+                if (user != null && await _userManager.CheckPasswordAsync(user, model.Password))
+                {
+
+                    AuthenticationProperties props = new AuthenticationProperties
+                    {
+                        IsPersistent = true,
+                        ExpiresUtc = DateTimeOffset.UtcNow.Add(TimeSpan.FromMinutes(5))
+                    };
+
+                    var isuser = new IdentityServerUser(user.Id)
+                    {
+                        DisplayName = user.UserName
+                    };
+
+
+                    await HttpContext.SignInAsync(user.Id, user.UserName, props);
+                    
+
+                    return Redirect(model.ReturnUrl);
+                }
+
+                ModelState.AddModelError("", "Invalid UserName or Password");
             }
 
-            var user = _users.FindByUsername(model.Username);
-
-            AuthenticationProperties props = new AuthenticationProperties
-            {
-                IsPersistent = true,
-                ExpiresUtc = DateTimeOffset.UtcNow.Add(TimeSpan.FromMinutes(5))
-            };
-
-            var isuser = new IdentityServerUser(user.SubjectId)
-            {
-                DisplayName = user.Username
-            };
-
-            await HttpContext.SignInAsync(isuser, props);
-
-            return Redirect(model.ReturnUrl);
+            return View();
         }
 
         [HttpGet]

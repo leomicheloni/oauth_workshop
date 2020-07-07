@@ -3,6 +3,7 @@ using IdentityServer4.Services;
 using IdentityServer4.Validation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
@@ -26,8 +27,14 @@ namespace IdentityServer
 
             builder.AddDeveloperSigningCredential();
 
+            
+
             builder.Services.AddTransient<IResourceOwnerPasswordValidator, ResourceOwnerPasswordValidator>();
             builder.Services.AddTransient<IProfileService, ProfileService>();
+
+
+            services.AddIdentityCore<ApplicationUser>(options => { });
+            services.AddScoped<IUserStore<ApplicationUser>, ApplicationUserStore>();
 
             services.AddAuthentication();
         }
@@ -50,8 +57,11 @@ namespace IdentityServer
                 config.AllowAnyHeader();
             });
 
+            
+
             app.UseIdentityServer();
             app.UseAuthorization();
+            
 
             app.UseEndpoints(endpoints =>
             {
