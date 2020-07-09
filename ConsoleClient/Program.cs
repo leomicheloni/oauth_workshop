@@ -55,9 +55,9 @@ namespace ConsoleClient
             tokenResponse = await client.RequestClientCredentialsTokenAsync(new ClientCredentialsTokenRequest
             {
                 Address = disco.TokenEndpoint,
-                ClientId = "client.credentials",
-                ClientSecret = "client.secret",
-                Scope = "API1"
+                ClientId = "",
+                ClientSecret = "",
+                Scope = ""
             });
 
             return tokenResponse;
